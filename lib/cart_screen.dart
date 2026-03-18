@@ -39,7 +39,7 @@ class CartProduct {
 }
 
 class CartItem {
-  final String itemId;   // _id of the cart item entry
+  final String itemId; // _id of the cart item entry
   final CartProduct product;
   int quantity;
 
@@ -97,7 +97,10 @@ class _CartScreenState extends State<CartScreen> {
 
   // ─── Fetch cart ──────────────────────────────────────────────────────────
   Future<void> _fetchCart() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final res = await http.get(
         Uri.parse('$_cartBaseUrl/cart/$_uid'),
@@ -133,18 +136,30 @@ class _CartScreenState extends State<CartScreen> {
             ));
           }
         }
-        setState(() { _items = parsed; _isLoading = false; });
+        setState(() {
+          _items = parsed;
+          _isLoading = false;
+        });
       } else {
-        setState(() { _error = 'Failed to load cart (${res.statusCode})'; _isLoading = false; });
+        setState(() {
+          _error = 'Failed to load cart (${res.statusCode})';
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      setState(() { _error = 'Connection error: $e'; _isLoading = false; });
+      setState(() {
+        _error = 'Connection error: $e';
+        _isLoading = false;
+      });
     }
   }
 
   // ─── Update quantity ─────────────────────────────────────────────────────
   Future<void> _updateQuantity(CartItem item, int newQty) async {
-    if (newQty < 1) { _removeItem(item); return; }
+    if (newQty < 1) {
+      _removeItem(item);
+      return;
+    }
     if (_updatingIds.contains(item.itemId)) return;
     if (item.product.id.isEmpty) {
       await _fetchCart(); // re-fetch to get populated product ids
@@ -161,7 +176,7 @@ class _CartScreenState extends State<CartScreen> {
         'productId': item.product.id,
         'quantity': newQty,
       });
-      final res = await http.post(
+      final res = await http.put(
         Uri.parse('$_cartBaseUrl/cart/update'),
         headers: _headers,
         body: body,
@@ -186,7 +201,9 @@ class _CartScreenState extends State<CartScreen> {
         Uri.parse('$_cartBaseUrl/cart/remove/$_uid/${item.product.id}'),
         headers: _headers,
       );
-      if (res.statusCode == 200 || res.statusCode == 201 || res.statusCode == 204) {
+      if (res.statusCode == 200 ||
+          res.statusCode == 201 ||
+          res.statusCode == 204) {
         setState(() => _items.removeWhere((i) => i.itemId == item.itemId));
       } else {
         _showSnack('Failed to remove item');
@@ -232,8 +249,14 @@ class _CartScreenState extends State<CartScreen> {
         Uri.parse('$_cartBaseUrl/cart/clear/$_uid'),
         headers: _headers,
       );
-      if (res.statusCode == 200 || res.statusCode == 201 || res.statusCode == 204) {
-        setState(() { _items.clear(); _promoDiscount = 0; _promoController.clear(); });
+      if (res.statusCode == 200 ||
+          res.statusCode == 201 ||
+          res.statusCode == 204) {
+        setState(() {
+          _items.clear();
+          _promoDiscount = 0;
+          _promoController.clear();
+        });
       } else {
         _showSnack('Failed to clear cart');
       }
@@ -246,7 +269,10 @@ class _CartScreenState extends State<CartScreen> {
   // ─── Promo code (mock) ───────────────────────────────────────────────────
   void _applyPromo() {
     final code = _promoController.text.trim().toUpperCase();
-    setState(() { _applyingPromo = true; _promoError = null; });
+    setState(() {
+      _applyingPromo = true;
+      _promoError = null;
+    });
     Future.delayed(const Duration(milliseconds: 600), () {
       setState(() {
         _applyingPromo = false;
@@ -280,7 +306,8 @@ class _CartScreenState extends State<CartScreen> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.indigo))
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.indigo))
             : _error != null
                 ? _buildError()
                 : Column(
@@ -293,11 +320,13 @@ class _CartScreenState extends State<CartScreen> {
                                 onRefresh: _fetchCart,
                                 color: Colors.indigo,
                                 child: SingleChildScrollView(
-                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
                                   child: Column(
                                     children: [
                                       const SizedBox(height: 12),
-                                      ..._items.map((item) => _buildCartItem(item)),
+                                      ..._items
+                                          .map((item) => _buildCartItem(item)),
                                       const SizedBox(height: 12),
                                       _buildPromoSection(),
                                       const SizedBox(height: 12),
@@ -325,7 +354,8 @@ class _CartScreenState extends State<CartScreen> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(10),
@@ -356,7 +386,8 @@ class _CartScreenState extends State<CartScreen> {
               onTap: _isClearing ? null : _clearCart,
               child: _isClearing
                   ? const SizedBox(
-                      width: 20, height: 20,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.red))
                   : Container(
@@ -387,7 +418,8 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           const Icon(Icons.wifi_off, size: 60, color: Colors.indigo),
           const SizedBox(height: 16),
-          Text(_error!, textAlign: TextAlign.center,
+          Text(_error!,
+              textAlign: TextAlign.center,
               style: const TextStyle(color: Color(0xFF6B7280))),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -395,7 +427,8 @@ class _CartScreenState extends State<CartScreen> {
             icon: const Icon(Icons.refresh),
             label: const Text('Try Again'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo, foregroundColor: Colors.white,
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
             ),
@@ -412,9 +445,10 @@ class _CartScreenState extends State<CartScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 100, height: 100,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EAF6), shape: BoxShape.circle),
+                color: const Color(0xFFE8EAF6), shape: BoxShape.circle),
             child: const Icon(Icons.shopping_cart_outlined,
                 size: 48, color: Colors.indigo),
           ),
@@ -431,15 +465,14 @@ class _CartScreenState extends State<CartScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo, foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 32, vertical: 14),
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Continue Shopping',
-                style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -456,15 +489,18 @@ class _CartScreenState extends State<CartScreen> {
     final isUpdating = _updatingIds.contains(item.itemId);
 
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProductDetailScreen(
-            productId: item.product.id,
-            heroImageUrl: imageUrl,
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailScreen(
+              productId: item.product.id,
+              heroImageUrl: imageUrl,
+            ),
           ),
-        ),
-      ),
+        );
+        _fetchCart(); // ✅ refresh cart when returning from product detail
+      },
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 300),
         opacity: isRemoving ? 0.4 : 1.0,
@@ -475,8 +511,9 @@ class _CartScreenState extends State<CartScreen> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: Colors.indigo.withOpacity(0.06),
-                blurRadius: 10, offset: const Offset(0, 3)),
+                  color: Colors.indigo.withOpacity(0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3)),
             ],
           ),
           child: Row(
@@ -488,18 +525,20 @@ class _CartScreenState extends State<CartScreen> {
                   bottomLeft: Radius.circular(14),
                 ),
                 child: Container(
-                  width: 100, height: 110,
+                  width: 100,
+                  height: 110,
                   color: const Color(0xFFE8EAF6),
                   child: imageUrl != null
-                      ? Image.network(imageUrl, fit: BoxFit.cover,
+                      ? Image.network(imageUrl,
+                          fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(Icons.image_not_supported,
-                                color: Colors.indigo, size: 28)),
+                              child: Icon(Icons.image_not_supported,
+                                  color: Colors.indigo, size: 28)),
                           loadingBuilder: (_, child, progress) {
                             if (progress == null) return child;
                             return const Center(
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.indigo));
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.indigo));
                           })
                       : const Center(
                           child: Icon(Icons.shopping_bag,
@@ -545,20 +584,18 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                           // ── Remove X ─────────────────────────────────
                           GestureDetector(
-                            onTap: isRemoving
-                                ? null
-                                : () => _removeItem(item),
+                            onTap: isRemoving ? null : () => _removeItem(item),
                             child: Padding(
                               padding: const EdgeInsets.only(left: 8),
                               child: isRemoving
                                   ? const SizedBox(
-                                      width: 16, height: 16,
+                                      width: 16,
+                                      height: 16,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           color: Color(0xFF9CA3AF)))
                                   : const Icon(Icons.close,
-                                      size: 18,
-                                      color: Color(0xFF9CA3AF)),
+                                      size: 18, color: Color(0xFF9CA3AF)),
                             ),
                           ),
                         ],
@@ -586,11 +623,13 @@ class _CartScreenState extends State<CartScreen> {
                                         item, item.quantity - 1),
                               ),
                               Container(
-                                width: 36, height: 32,
+                                width: 36,
+                                height: 32,
                                 alignment: Alignment.center,
                                 child: isUpdating
                                     ? const SizedBox(
-                                        width: 14, height: 14,
+                                        width: 14,
+                                        height: 14,
                                         child: CircularProgressIndicator(
                                             strokeWidth: 2,
                                             color: Colors.indigo))
@@ -631,7 +670,8 @@ class _CartScreenState extends State<CartScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 30, height: 30,
+        width: 30,
+        height: 30,
         decoration: BoxDecoration(
           color: filled ? Colors.indigo : Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -641,8 +681,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ),
         child: Icon(icon,
-            size: 16,
-            color: filled ? Colors.white : const Color(0xFF374151)),
+            size: 16, color: filled ? Colors.white : const Color(0xFF374151)),
       ),
     );
   }
@@ -657,8 +696,9 @@ class _CartScreenState extends State<CartScreen> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.indigo.withOpacity(0.06),
-            blurRadius: 10, offset: const Offset(0, 3)),
+              color: Colors.indigo.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -678,29 +718,25 @@ class _CartScreenState extends State<CartScreen> {
                   style: const TextStyle(fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'Enter code',
-                    hintStyle: const TextStyle(
-                        color: Color(0xFF9CA3AF), fontSize: 13),
+                    hintStyle:
+                        const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
                     filled: true,
                     fillColor: const Color(0xFFF9FAFB),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     errorText: _promoError,
-                    errorStyle:
-                        const TextStyle(fontSize: 11),
+                    errorStyle: const TextStyle(fontSize: 11),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Color(0xFFE5E7EB)),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Color(0xFFE5E7EB)),
+                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          const BorderSide(color: Colors.indigo),
+                      borderSide: const BorderSide(color: Colors.indigo),
                     ),
                   ),
                 ),
@@ -711,20 +747,20 @@ class _CartScreenState extends State<CartScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                 ),
                 child: _applyingPromo
                     ? const SizedBox(
-                        width: 16, height: 16,
+                        width: 16,
+                        height: 16,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
                     : const Text('Apply',
                         style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold)),
+                            fontSize: 13, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -732,8 +768,7 @@ class _CartScreenState extends State<CartScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.check_circle,
-                    size: 14, color: Colors.green),
+                const Icon(Icons.check_circle, size: 14, color: Colors.green),
                 const SizedBox(width: 4),
                 Text(
                   'Promo applied! -\$${_promoDiscount.toStringAsFixed(2)} off',
@@ -760,8 +795,9 @@ class _CartScreenState extends State<CartScreen> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.indigo.withOpacity(0.06),
-            blurRadius: 10, offset: const Offset(0, 3)),
+              color: Colors.indigo.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -803,14 +839,12 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _summaryRow(String label, String value,
-      {Color? valueColor}) {
+  Widget _summaryRow(String label, String value, {Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label,
-            style: const TextStyle(
-                fontSize: 13, color: Color(0xFF6B7280))),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
         Text(value,
             style: TextStyle(
                 fontSize: 13,
@@ -828,28 +862,34 @@ class _CartScreenState extends State<CartScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12, offset: const Offset(0, -3)),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -3)),
         ],
       ),
       child: ElevatedButton(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const CheckoutScreen()),
+          MaterialPageRoute(
+            builder: (_) => CheckoutScreen(
+              subtotal: _subtotal,
+              shippingFee: _shippingCost,
+              promoDiscount: _promoDiscount,
+            ),
+          ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.indigo,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('Proceed to Checkout',
-                style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.all(4),

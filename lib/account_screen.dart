@@ -5,6 +5,8 @@ import 'auth_session.dart';
 import 'addresses_screen.dart';
 import 'log_in.dart';
 import 'wishlist_screen.dart';
+import 'orders_screen.dart';
+import 'edit_profile_screen.dart';
 
 const String _accountBaseUrl = 'http://10.0.2.2:3000';
 
@@ -84,7 +86,6 @@ class _AccountScreenState extends State<AccountScreen> {
 
                 if (res.statusCode == 200 || res.statusCode == 201) {
                   AuthSession.instance.clear();
-
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
                     (_) => false,
@@ -106,6 +107,20 @@ class _AccountScreenState extends State<AccountScreen> {
         ],
       ),
     );
+  }
+
+  // ✅ Navigate to EditProfileScreen and refresh on return
+  Future<void> _openEditProfile(String name, String email) async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(
+          currentName: name,
+          currentEmail: email,
+        ),
+      ),
+    );
+    if (updated == true) _fetchProfile();
   }
 
   @override
@@ -132,7 +147,11 @@ class _AccountScreenState extends State<AccountScreen> {
                         iconBg: const Color(0xFFE8EAF6),
                         label: 'My Orders',
                         badge: null,
-                        onTap: () => _showSnack('Orders coming soon'),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const OrdersScreen()),
+                        ),
                       ),
                       _buildMenuItem(
                         icon: Icons.favorite_border,
@@ -142,13 +161,20 @@ class _AccountScreenState extends State<AccountScreen> {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const WishlistScreen(),
-                          ),
+                              builder: (_) => const WishlistScreen()),
                         ),
                       ),
                     ]),
                     const SizedBox(height: 12),
                     _buildSection('ACCOUNT DETAILS', [
+                      // ✅ Edit Profile menu item
+                      _buildMenuItem(
+                        icon: Icons.person_outline,
+                        iconColor: Colors.indigo,
+                        iconBg: const Color(0xFFE8EAF6),
+                        label: 'Edit Profile',
+                        onTap: () => _openEditProfile(name, email),
+                      ),
                       _buildMenuItem(
                         icon: Icons.location_on_outlined,
                         iconColor: const Color(0xFFF59E0B),
@@ -189,8 +215,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     _buildSignOut(),
                     const SizedBox(height: 16),
                     const Text('App Version 1.0.0 (Build 1)',
-                        style:
-                            TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                        style: TextStyle(
+                            fontSize: 11, color: Color(0xFF9CA3AF))),
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -216,10 +242,9 @@ class _AccountScreenState extends State<AccountScreen> {
                 child: Text(
                   'Account',
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-                  ),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F2937)),
                 ),
               ),
               _iconBtn(Icons.notifications_outlined,
@@ -232,54 +257,70 @@ class _AccountScreenState extends State<AccountScreen> {
           const SizedBox(height: 20),
           Row(
             children: [
-              Stack(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8EAF6),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: Colors.indigo.withOpacity(0.3), width: 2),
+              // ✅ Tap avatar or edit icon to open EditProfileScreen
+              GestureDetector(
+                onTap: () => _openEditProfile(name, email),
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8EAF6),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Colors.indigo.withOpacity(0.3), width: 2),
+                      ),
+                      child: Center(
+                        child: Text(initial,
+                            style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo)),
+                      ),
                     ),
-                    child: Center(
-                      child: Text(initial,
-                          style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.indigo)),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: const BoxDecoration(
+                            color: Colors.indigo, shape: BoxShape.circle),
+                        child: const Icon(Icons.edit,
+                            size: 12, color: Colors.white),
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                          color: Colors.indigo, shape: BoxShape.circle),
-                      child:
-                          const Icon(Icons.edit, size: 12, color: Colors.white),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(width: 14),
+              // ✅ Tap name/email area also opens EditProfileScreen
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name,
-                        style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937))),
-                    const SizedBox(height: 2),
-                    Text(email,
-                        style: const TextStyle(
-                            fontSize: 13, color: Color(0xFF6B7280))),
-                  ],
+                child: GestureDetector(
+                  onTap: () => _openEditProfile(name, email),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name,
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1F2937))),
+                      const SizedBox(height: 2),
+                      Text(email,
+                          style: const TextStyle(
+                              fontSize: 13, color: Color(0xFF6B7280))),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Tap to edit profile →',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.indigo,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

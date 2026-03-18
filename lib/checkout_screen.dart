@@ -8,7 +8,16 @@ import 'paypal_webview.dart';
 const String _checkoutBaseUrl = 'http://10.0.2.2:3000';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  final double subtotal;
+  final double shippingFee;
+  final double promoDiscount;
+
+  const CheckoutScreen({
+    super.key,
+    required this.subtotal,
+    required this.shippingFee,
+    this.promoDiscount = 0,
+  });
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -28,6 +37,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         'Authorization': AuthSession.instance.bearerToken,
       };
 
+  double get _subtotal => widget.subtotal;
+  double get _shippingFee => widget.shippingFee;
+  double get _promoDiscount => widget.promoDiscount;
+  double get _total => _subtotal + _shippingFee - _promoDiscount;
+  String get _shippingLabel =>
+      _shippingFee == 0 ? 'Free' : '\$${_shippingFee.toStringAsFixed(2)}';
+
   @override
   void initState() {
     super.initState();
@@ -36,14 +52,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<void> _placeOrder() async {
     if (_placingOrder) return;
+
+    // Guard: must have address selected
+    if (_selectedAddressId == null) {
+      _showSnack('Please select a shipping address');
+      return;
+    }
+
     setState(() => _placingOrder = true);
 
     try {
-      // Step 1: Create order from cart
+      // ✅ Step 1: Create order with userId + addressId
       final orderRes = await http.post(
         Uri.parse('$_checkoutBaseUrl/orders'),
         headers: _headers,
-        body: jsonEncode({'userId': _uid}),
+        body: jsonEncode({
+          'userId': _uid,
+          'addressId': _selectedAddressId,
+        }),
       );
 
       if (orderRes.statusCode != 200 && orderRes.statusCode != 201) {
@@ -84,9 +110,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
 
       // Step 3: Open PayPal WebView
-      // ✅ Don't check result — WebView calls popUntil(isFirst) on success
-      //    which pops this screen too, so result will always be null on success.
-      //    On cancel, WebView pops with false and we stay here.
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
@@ -94,7 +117,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
 
-      // ✅ Only handle cancel here — success is handled by WebView's popUntil
       if (mounted && result == false) {
         _showSnack('Payment Cancelled');
       }
@@ -211,11 +233,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Row(
         children: List.generate(steps.length * 2 - 1, (i) {
           if (i.isOdd) {
-            final filled = 0 < _currentStep;
             return Expanded(
               child: Container(
                 height: 2,
-                color: filled ? Colors.indigo : const Color(0xFFE5E7EB),
+                color:
+                    0 < _currentStep ? Colors.indigo : const Color(0xFFE5E7EB),
               ),
             );
           }
@@ -331,10 +353,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: const Color(0xFFD1D5DB),
-                    style: BorderStyle.solid,
-                    width: 1.5),
+                border: Border.all(color: const Color(0xFFD1D5DB), width: 1.5),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -634,6 +653,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 24),
+
+          // ✅ Real totals from cart
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -643,26 +664,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             child: Column(
               children: [
-                _summaryRow('Subtotal', '\$249.00'),
+                _summaryRow('Subtotal', '\$${_subtotal.toStringAsFixed(2)}'),
                 const SizedBox(height: 8),
-                _summaryRow('Shipping', 'Free'),
+                _summaryRow('Shipping', _shippingLabel),
+                if (_promoDiscount > 0) ...[
+                  const SizedBox(height: 8),
+                  _summaryRow(
+                    'Promo Discount',
+                    '-\$${_promoDiscount.toStringAsFixed(2)}',
+                    valueColor: Colors.green,
+                  ),
+                ],
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 10),
                   child: Divider(height: 1, color: Color(0xFFE5E7EB)),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text('Total',
+                  children: [
+                    const Text('Total',
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1F2937))),
-                    Text('\$249.00',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo)),
+                    Text(
+                      '\$${_total.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.indigo),
+                    ),
                   ],
                 ),
               ],
@@ -739,17 +770,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _summaryRow(String label, String value) {
+  Widget _summaryRow(String label, String value, {Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label,
             style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
         Text(value,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2937))),
+                color: valueColor ?? const Color(0xFF1F2937))),
       ],
     );
   }
