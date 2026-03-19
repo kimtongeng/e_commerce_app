@@ -5,11 +5,12 @@ import 'auth_session.dart';
 import 'product_detail_screen.dart';
 
 const String _wishlistBaseUrl = 'http://10.0.2.2:3000';
+const Color kBrand = Color.fromARGB(255, 98, 113, 241);
 
 // ─── Model ────────────────────────────────────────────────────────────────────
 
 class WishlistItem {
-  final String wishlistId; // _id of the wishlist entry
+  final String wishlistId;
   final String productId;
   final String title;
   final String description;
@@ -91,7 +92,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          // Filter out items where product is null
           _items = data
               .where((e) => e['product'] != null)
               .map((e) => WishlistItem.fromJson(e))
@@ -151,14 +151,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(color: Colors.indigo))
+                      child: CircularProgressIndicator(color: kBrand))
                   : _error != null
                       ? _buildError()
                       : _items.isEmpty
                           ? _buildEmpty()
                           : RefreshIndicator(
                               onRefresh: _fetchWishlist,
-                              color: Colors.indigo,
+                              color: kBrand,
                               child: _buildList(),
                             ),
             ),
@@ -200,16 +200,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ),
           if (_items.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8EAF6),
+                color: const Color(0xFFEEEFFD),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '${_items.length} item${_items.length == 1 ? '' : 's'}',
                 style: const TextStyle(
                     fontSize: 12,
-                    color: Colors.indigo,
+                    color: kBrand,
                     fontWeight: FontWeight.w600),
               ),
             ),
@@ -224,7 +225,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off, size: 60, color: Colors.indigo),
+          const Icon(Icons.wifi_off, size: 60, color: kBrand),
           const SizedBox(height: 16),
           Text(_error ?? 'Something went wrong',
               textAlign: TextAlign.center,
@@ -235,7 +236,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             icon: const Icon(Icons.refresh),
             label: const Text('Try Again'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
+              backgroundColor: kBrand,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
@@ -255,12 +256,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
           Container(
             width: 100,
             height: 100,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8EAF6),
+            decoration: const BoxDecoration(
+              color: Color(0xFFEEEFFD),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.favorite_border,
-                size: 48, color: Colors.indigo),
+            child: const Icon(Icons.favorite_border, size: 48, color: kBrand),
           ),
           const SizedBox(height: 20),
           const Text('Your wishlist is empty',
@@ -276,14 +276,16 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
+              backgroundColor: kBrand,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Start Shopping',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                style:
+                    TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -318,7 +320,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
             ),
           ),
         );
-        // If user removed from wishlist in detail screen, remove from list
         if (updatedWishlist == false && mounted) {
           setState(
               () => _items.removeWhere((i) => i.wishlistId == item.wishlistId));
@@ -331,7 +332,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.indigo.withOpacity(0.07),
+              color: kBrand.withOpacity(0.07),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -348,26 +349,26 @@ class _WishlistScreenState extends State<WishlistScreen> {
               child: Container(
                 width: 110,
                 height: 120,
-                color: const Color(0xFFE8EAF6),
+                color: const Color(0xFFEEEFFD),
                 child: imageUrl != null
                     ? Image.network(
                         imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Center(
                           child: Icon(Icons.image_not_supported,
-                              color: Colors.indigo, size: 30),
+                              color: kBrand, size: 30),
                         ),
                         loadingBuilder: (_, child, progress) {
                           if (progress == null) return child;
                           return const Center(
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.indigo),
+                                strokeWidth: 2, color: kBrand),
                           );
                         },
                       )
                     : const Center(
                         child: Icon(Icons.shopping_bag,
-                            size: 40, color: Colors.indigo),
+                            size: 40, color: kBrand),
                       ),
               ),
             ),
@@ -383,7 +384,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       item.brand.toUpperCase(),
                       style: const TextStyle(
                           fontSize: 10,
-                          color: Colors.indigo,
+                          color: kBrand,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5),
                     ),
@@ -414,7 +415,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1F2937)),
                         ),
-                        // Rating
                         if (item.rating > 0)
                           Row(
                             children: [

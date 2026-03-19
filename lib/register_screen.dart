@@ -5,6 +5,7 @@ import 'auth_session.dart';
 import 'ecommerce_home.dart';
 
 const String _regBaseUrl = 'http://10.0.2.2:3000';
+const Color kBrand = Color.fromARGB(255, 98, 113, 241);
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -58,7 +59,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final data = jsonDecode(res.body);
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        // Store session — same shape as login response
         AuthSession.instance.userId = data['user_id'] ?? '';
         AuthSession.instance.accessToken = data['access_token'] ?? '';
 
@@ -118,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF1F2937))),
-                    const SizedBox(width: 36), // balance
+                    const SizedBox(width: 36),
                   ],
                 ),
 
@@ -258,7 +258,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _register,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo,
+                      backgroundColor: kBrand,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
@@ -269,7 +269,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2.5, color: Colors.white))
+                                strokeWidth: 2.5, color: Colors.white),
+                          )
                         : const Text('Create Account',
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold)),
@@ -291,7 +292,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: const Text('Sign In',
                             style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.indigo,
+                                color: kBrand,
                                 fontWeight: FontWeight.bold)),
                       ),
                     ],
@@ -345,7 +346,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.indigo, width: 1.5)),
+            borderSide: const BorderSide(color: kBrand, width: 1.5)),
         errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.red.shade300)),

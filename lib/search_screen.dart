@@ -6,6 +6,7 @@ import 'auth_session.dart';
 import 'product_detail_screen.dart';
 
 const String _searchBaseUrl = "http://10.0.2.2:3000";
+const Color kBrand = Color.fromARGB(255, 98, 113, 241);
 
 // ─── Search Result Model ──────────────────────────────────────────────────────
 
@@ -105,7 +106,6 @@ class _SearchScreenState extends State<SearchScreen> {
       _searchController.text = widget.initialQuery;
       _search(widget.initialQuery);
     } else {
-      // Auto-focus and show keyboard when opened fresh
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _focusNode.requestFocus();
       });
@@ -140,7 +140,6 @@ class _SearchScreenState extends State<SearchScreen> {
     if (keyword.isEmpty) return;
     setState(() => _isLoading = true);
 
-    // Add to recent searches
     if (!_recentSearches.contains(keyword)) {
       setState(() {
         _recentSearches.insert(0, keyword);
@@ -160,7 +159,6 @@ class _SearchScreenState extends State<SearchScreen> {
             .map((e) => SearchProduct.fromJson(e))
             .toList();
 
-        // Client-side sort
         _sortResults(results);
 
         setState(() {
@@ -229,13 +227,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       style: TextStyle(
                           fontSize: 14,
                           color: _sortBy == option
-                              ? Colors.indigo
+                              ? kBrand
                               : const Color(0xFF374151),
                           fontWeight: _sortBy == option
                               ? FontWeight.w600
                               : FontWeight.normal)),
                   trailing: _sortBy == option
-                      ? const Icon(Icons.check, color: Colors.indigo, size: 18)
+                      ? const Icon(Icons.check, color: kBrand, size: 18)
                       : null,
                   onTap: () {
                     Navigator.pop(context);
@@ -257,11 +255,9 @@ class _SearchScreenState extends State<SearchScreen> {
       final uid = AuthSession.instance.userId;
       http.Response response;
       if (product.isWishlist) {
-        // DELETE /wishlist/USER_ID/PRODUCT_ID
         final url = Uri.parse('$_searchBaseUrl/wishlist/$uid/${product.id}');
         response = await http.delete(url, headers: _headers);
       } else {
-        // POST /wishlist { userId, productId }
         final url = Uri.parse('$_searchBaseUrl/wishlist');
         response = await http.post(
           url,
@@ -297,8 +293,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child:
-                          CircularProgressIndicator(color: Colors.indigo))
+                      child: CircularProgressIndicator(color: kBrand))
                   : !_hasSearched
                       ? _buildEmptyState()
                       : _results.isEmpty
@@ -312,14 +307,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // ─── Search Bar ───────────────────────────────────────────────────────────
-
   Widget _buildSearchBar() {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         children: [
-          // Back button
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
@@ -334,20 +327,18 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          // Search input
           Expanded(
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFFE8EAF6),
+                color: const Color(0xFFEEEFFD),
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.indigo, width: 1.5),
+                border: Border.all(color: kBrand, width: 1.5),
               ),
               child: Row(
                 children: [
                   const SizedBox(width: 12),
-                  const Icon(Icons.search,
-                      color: Colors.indigo, size: 20),
+                  const Icon(Icons.search, color: kBrand, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -366,7 +357,6 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                   ),
-                  // Clear button
                   if (_searchController.text.isNotEmpty)
                     GestureDetector(
                       onTap: () {
@@ -389,18 +379,16 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          // Filter icon
           GestureDetector(
             onTap: _showSortSheet,
             child: Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: Colors.indigo,
+                color: kBrand,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.tune,
-                  size: 18, color: Colors.white),
+              child: const Icon(Icons.tune, size: 18, color: Colors.white),
             ),
           ),
         ],
@@ -409,7 +397,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // ─── Filter Chips ─────────────────────────────────────────────────────────
-
   Widget _buildFilterChips() {
     return Container(
       color: Colors.white,
@@ -423,9 +410,9 @@ class _SearchScreenState extends State<SearchScreen> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8EAF6),
+                color: const Color(0xFFEEEFFD),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+                border: Border.all(color: kBrand.withOpacity(0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -433,14 +420,13 @@ class _SearchScreenState extends State<SearchScreen> {
                   Text(filter,
                       style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.indigo,
+                          color: kBrand,
                           fontWeight: FontWeight.w500)),
                   const SizedBox(width: 4),
                   GestureDetector(
                     onTap: () =>
                         setState(() => _activeFilters.remove(filter)),
-                    child: const Icon(Icons.close,
-                        size: 14, color: Colors.indigo),
+                    child: const Icon(Icons.close, size: 14, color: kBrand),
                   ),
                 ],
               ),
@@ -452,14 +438,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // ─── Empty / Initial State ────────────────────────────────────────────────
-
   Widget _buildEmptyState() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Recent searches
           if (_recentSearches.isNotEmpty) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -474,7 +458,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: const Text('Clear all',
                       style: TextStyle(
                           fontSize: 12,
-                          color: Colors.indigo,
+                          color: kBrand,
                           fontWeight: FontWeight.w500)),
                 ),
               ],
@@ -512,8 +496,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         const SizedBox(width: 6),
                         Text(s,
                             style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF374151))),
+                                fontSize: 13, color: Color(0xFF374151))),
                       ],
                     ),
                   ),
@@ -524,7 +507,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
           const SizedBox(height: 28),
 
-          // Popular categories
           const Text('Popular Categories',
               style: TextStyle(
                   fontSize: 14,
@@ -571,10 +553,10 @@ class _SearchScreenState extends State<SearchScreen> {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: const Color(0xFFE8EAF6),
+                color: const Color(0xFFEEEFFD),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, size: 16, color: Colors.indigo),
+              child: Icon(icon, size: 16, color: kBrand),
             ),
             const SizedBox(width: 10),
             Text(label,
@@ -589,13 +571,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // ─── No Results ───────────────────────────────────────────────────────────
-
   Widget _buildNoResults() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64, color: Colors.indigo.withOpacity(0.3)),
+          Icon(Icons.search_off, size: 64, color: kBrand.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
             'No results for "${_searchController.text}"',
@@ -616,15 +597,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // ─── Results ──────────────────────────────────────────────────────────────
-
   Widget _buildResults() {
     return Column(
       children: [
-        // Results header
         Container(
           color: Colors.white,
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -651,26 +629,24 @@ class _SearchScreenState extends State<SearchScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8EAF6),
+                    color: const Color(0xFFEEEFFD),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: Colors.indigo.withOpacity(0.3)),
+                    border: Border.all(color: kBrand.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.sort,
-                          size: 14, color: Colors.indigo),
+                      const Icon(Icons.sort, size: 14, color: kBrand),
                       const SizedBox(width: 4),
                       Text(
                         'Sort: $_sortBy',
                         style: const TextStyle(
                             fontSize: 12,
-                            color: Colors.indigo,
+                            color: kBrand,
                             fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(width: 4),
                       const Icon(Icons.keyboard_arrow_down,
-                          size: 14, color: Colors.indigo),
+                          size: 14, color: kBrand),
                     ],
                   ),
                 ),
@@ -678,8 +654,6 @@ class _SearchScreenState extends State<SearchScreen> {
             ],
           ),
         ),
-
-        // Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -701,7 +675,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // ─── Product Card ─────────────────────────────────────────────────────────
-
   Widget _buildProductCard(SearchProduct product) {
     final hasImage = product.images.isNotEmpty;
     final imageUrl = hasImage
@@ -729,7 +702,7 @@ class _SearchScreenState extends State<SearchScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.indigo.withOpacity(0.07),
+              color: kBrand.withOpacity(0.07),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -738,16 +711,15 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
             Stack(
               children: [
                 Container(
                   height: 150,
                   width: double.infinity,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFE8EAF6),
-                    borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(12)),
+                    color: Color(0xFFEEEFFD),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(12)),
                   ),
                   child: imageUrl != null
                       ? ClipRRect(
@@ -758,24 +730,22 @@ class _SearchScreenState extends State<SearchScreen> {
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => const Center(
                               child: Icon(Icons.image_not_supported,
-                                  color: Colors.indigo, size: 36),
+                                  color: kBrand, size: 36),
                             ),
                             loadingBuilder: (_, child, progress) {
                               if (progress == null) return child;
                               return const Center(
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.indigo),
+                                    strokeWidth: 2, color: kBrand),
                               );
                             },
                           ),
                         )
                       : const Center(
                           child: Icon(Icons.shopping_bag,
-                              size: 50, color: Colors.indigo),
+                              size: 50, color: kBrand),
                         ),
                 ),
-                // Wishlist heart
                 Positioned(
                   top: 8,
                   right: 8,
@@ -799,7 +769,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           ? const Padding(
                               padding: EdgeInsets.all(7),
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.indigo),
+                                  strokeWidth: 2, color: kBrand),
                             )
                           : Icon(
                               product.isWishlist
@@ -815,8 +785,6 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ],
             ),
-
-            // Info
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -826,7 +794,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     product.brand.toUpperCase(),
                     style: const TextStyle(
                         fontSize: 10,
-                        color: Colors.indigo,
+                        color: kBrand,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5),
                   ),

@@ -7,8 +7,10 @@ import 'log_in.dart';
 import 'wishlist_screen.dart';
 import 'orders_screen.dart';
 import 'edit_profile_screen.dart';
+import 'support_center_screen.dart';
 
 const String _accountBaseUrl = 'http://10.0.2.2:3000';
+const Color kBrand = Color.fromARGB(255, 98, 113, 241);
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -55,7 +57,8 @@ class _AccountScreenState extends State<AccountScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Sign Out',
             style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text('Are you sure you want to sign out?'),
@@ -109,7 +112,6 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  // ✅ Navigate to EditProfileScreen and refresh on return
   Future<void> _openEditProfile(String name, String email) async {
     final updated = await Navigator.push<bool>(
       context,
@@ -133,8 +135,7 @@ class _AccountScreenState extends State<AccountScreen> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: Colors.indigo))
+            ? const Center(child: CircularProgressIndicator(color: kBrand))
             : SingleChildScrollView(
                 child: Column(
                   children: [
@@ -143,8 +144,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     _buildSection('MY SHOPPING', [
                       _buildMenuItem(
                         icon: Icons.shopping_bag_outlined,
-                        iconColor: Colors.indigo,
-                        iconBg: const Color(0xFFE8EAF6),
+                        iconColor: kBrand,
+                        iconBg: const Color(0xFFEEEFFD),
                         label: 'My Orders',
                         badge: null,
                         onTap: () => Navigator.push(
@@ -167,11 +168,10 @@ class _AccountScreenState extends State<AccountScreen> {
                     ]),
                     const SizedBox(height: 12),
                     _buildSection('ACCOUNT DETAILS', [
-                      // ✅ Edit Profile menu item
                       _buildMenuItem(
                         icon: Icons.person_outline,
-                        iconColor: Colors.indigo,
-                        iconBg: const Color(0xFFE8EAF6),
+                        iconColor: kBrand,
+                        iconBg: const Color(0xFFEEEFFD),
                         label: 'Edit Profile',
                         onTap: () => _openEditProfile(name, email),
                       ),
@@ -186,20 +186,13 @@ class _AccountScreenState extends State<AccountScreen> {
                               builder: (_) => const AddressesScreen()),
                         ),
                       ),
-                      _buildMenuItem(
-                        icon: Icons.credit_card_outlined,
-                        iconColor: Colors.green,
-                        iconBg: const Color(0xFFE8F5E9),
-                        label: 'Payment Methods',
-                        onTap: () => _showSnack('Payment methods coming soon'),
-                      ),
                     ]),
                     const SizedBox(height: 12),
                     _buildSection('PREFERENCES', [
                       _buildMenuItem(
                         icon: Icons.tune,
-                        iconColor: Colors.indigo,
-                        iconBg: const Color(0xFFE8EAF6),
+                        iconColor: kBrand,
+                        iconBg: const Color(0xFFEEEFFD),
                         label: 'Settings',
                         onTap: () => _showSnack('Settings coming soon'),
                       ),
@@ -208,7 +201,11 @@ class _AccountScreenState extends State<AccountScreen> {
                         iconColor: const Color(0xFF6B7280),
                         iconBg: const Color(0xFFF3F4F6),
                         label: 'Support Center',
-                        onTap: () => _showSnack('Support coming soon'),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const SupportCenterScreen()),
+                        ),
                       ),
                     ]),
                     const SizedBox(height: 20),
@@ -247,17 +244,11 @@ class _AccountScreenState extends State<AccountScreen> {
                       color: Color(0xFF1F2937)),
                 ),
               ),
-              _iconBtn(Icons.notifications_outlined,
-                  () => _showSnack('Notifications coming soon')),
-              const SizedBox(width: 8),
-              _iconBtn(Icons.settings_outlined,
-                  () => _showSnack('Settings coming soon')),
             ],
           ),
           const SizedBox(height: 20),
           Row(
             children: [
-              // ✅ Tap avatar or edit icon to open EditProfileScreen
               GestureDetector(
                 onTap: () => _openEditProfile(name, email),
                 child: Stack(
@@ -266,17 +257,17 @@ class _AccountScreenState extends State<AccountScreen> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8EAF6),
+                        color: const Color(0xFFEEEFFD),
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: Colors.indigo.withOpacity(0.3), width: 2),
+                            color: kBrand.withOpacity(0.3), width: 2),
                       ),
                       child: Center(
                         child: Text(initial,
                             style: const TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.indigo)),
+                                color: kBrand)),
                       ),
                     ),
                     Positioned(
@@ -286,7 +277,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         width: 20,
                         height: 20,
                         decoration: const BoxDecoration(
-                            color: Colors.indigo, shape: BoxShape.circle),
+                            color: kBrand, shape: BoxShape.circle),
                         child: const Icon(Icons.edit,
                             size: 12, color: Colors.white),
                       ),
@@ -295,7 +286,6 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
               const SizedBox(width: 14),
-              // ✅ Tap name/email area also opens EditProfileScreen
               Expanded(
                 child: GestureDetector(
                   onTap: () => _openEditProfile(name, email),
@@ -316,7 +306,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         'Tap to edit profile →',
                         style: TextStyle(
                             fontSize: 11,
-                            color: Colors.indigo,
+                            color: kBrand,
                             fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -326,21 +316,6 @@ class _AccountScreenState extends State<AccountScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _iconBtn(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, size: 20, color: const Color(0xFF374151)),
       ),
     );
   }

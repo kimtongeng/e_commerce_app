@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'auth_session.dart';
 
 const String _baseUrl = "http://10.0.2.2:3000";
+const Color kBrand = Color.fromARGB(255, 98, 113, 241);
 
 // ─── Models ──────────────────────────────────────────────────────────────────
 
@@ -145,7 +146,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.dispose();
   }
 
-  // ─── Fetch product with userId for isWishlist status ─────────────────────
+  // ─── Fetch product ────────────────────────────────────────────────────────
   Future<void> _fetchProduct() async {
     setState(() {
       _isLoading = true;
@@ -153,7 +154,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     });
 
     try {
-      // GET /products/:id?userId=USER_ID
       final response = await http.get(
         Uri.parse("$_baseUrl/products/${widget.productId}?userId=$_uid"),
         headers: _headers,
@@ -186,27 +186,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   // ─── Toggle wishlist ──────────────────────────────────────────────────────
   Future<void> _toggleWishlist() async {
     if (_product == null || _isWishlistLoading) return;
-
     setState(() => _isWishlistLoading = true);
-
     try {
       http.Response response;
-
       if (_product!.isWishlist) {
-        // DELETE /wishlist/USER_ID/PRODUCT_ID
         response = await http.delete(
           Uri.parse("$_baseUrl/wishlist/$_uid/${_product!.id}"),
           headers: _headers,
         );
       } else {
-        // POST /wishlist { userId, productId }
         response = await http.post(
           Uri.parse("$_baseUrl/wishlist"),
           headers: _headers,
           body: jsonEncode({"userId": _uid, "productId": _product!.id}),
         );
       }
-
       if (response.statusCode == 200 ||
           response.statusCode == 201 ||
           response.statusCode == 204) {
@@ -221,7 +215,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  // ─── Fetch reviews ───────────────────────────────────────────────────────
+  // ─── Fetch reviews ────────────────────────────────────────────────────────
   Future<void> _fetchReviews() async {
     setState(() => _reviewsLoading = true);
     try {
@@ -328,15 +322,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) {
-        if (!didPop) {
-          Navigator.pop(context, _product?.isWishlist);
-        }
+        if (!didPop) Navigator.pop(context, _product?.isWishlist);
       },
       child: Scaffold(
         backgroundColor: Colors.white,
         body: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: Colors.indigo))
+            ? const Center(child: CircularProgressIndicator(color: kBrand))
             : _error != null
                 ? _buildError()
                 : Stack(
@@ -389,18 +380,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ],
                   ),
-      ), // Scaffold
-    ); // PopScope
+      ),
+    );
   }
 
   // ─── Error ────────────────────────────────────────────────────────────────
-
   Widget _buildError() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 60, color: Colors.indigo),
+          const Icon(Icons.error_outline, size: 60, color: kBrand),
           const SizedBox(height: 16),
           Text(_error ?? 'Something went wrong',
               textAlign: TextAlign.center,
@@ -411,7 +401,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             icon: const Icon(Icons.refresh),
             label: const Text('Try Again'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
+              backgroundColor: kBrand,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
@@ -423,7 +413,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Top Bar ──────────────────────────────────────────────────────────────
-
   Widget _buildTopBar() {
     return Positioned(
       top: 0,
@@ -481,7 +470,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Image Section ────────────────────────────────────────────────────────
-
   Widget _buildImageSection() {
     final images = _allImages;
     final hasImages = images.isNotEmpty;
@@ -504,16 +492,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     loadingBuilder: (_, child, progress) {
                       if (progress == null) return child;
                       return const Center(
-                        child: CircularProgressIndicator(color: Colors.indigo),
+                        child: CircularProgressIndicator(color: kBrand),
                       );
                     },
                   ),
                 )
               : Container(
-                  color: const Color(0xFFE8EAF6),
+                  color: const Color(0xFFEEEFFD),
                   child: const Center(
-                    child: Icon(Icons.shopping_bag,
-                        size: 80, color: Colors.indigo),
+                    child: Icon(Icons.shopping_bag, size: 80, color: kBrand),
                   ),
                 ),
           if (images.length > 1)
@@ -532,7 +519,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     height: 6,
                     decoration: BoxDecoration(
                       color: i == _currentImageIndex
-                          ? Colors.indigo
+                          ? kBrand
                           : const Color(0xFFD1D5DB),
                       borderRadius: BorderRadius.circular(3),
                     ),
@@ -546,7 +533,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Product Info ─────────────────────────────────────────────────────────
-
   Widget _buildProductInfo() {
     final product = _product!;
 
@@ -575,7 +561,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Colors.indigo,
+                  color: kBrand,
                 ),
               ),
             ],
@@ -612,7 +598,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Color Selector ───────────────────────────────────────────────────────
-
   Widget _buildColorSelector() {
     final colors = _uniqueColors;
     if (colors.isEmpty) return const SizedBox.shrink();
@@ -644,7 +629,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           Row(
             children: colors.map((color) {
               final isSelected = _selectedColor == color;
-              final bgColor = colorMap[color] ?? Colors.indigo;
+              final bgColor = colorMap[color] ?? kBrand;
 
               return GestureDetector(
                 onTap: () => setState(() => _selectedColor = color),
@@ -656,13 +641,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     color: bgColor,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? Colors.indigo : Colors.transparent,
+                      color: isSelected ? kBrand : Colors.transparent,
                       width: 2.5,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: Colors.indigo.withOpacity(0.3),
+                              color: kBrand.withOpacity(0.3),
                               blurRadius: 6,
                             )
                           ]
@@ -687,7 +672,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Size Selector ────────────────────────────────────────────────────────
-
   Widget _buildSizeSelector() {
     final sizes = _uniqueSizes;
     if (sizes.isEmpty) return const SizedBox.shrink();
@@ -711,7 +695,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: const Text('Size Guide',
                     style: TextStyle(
                         fontSize: 12,
-                        color: Colors.indigo,
+                        color: kBrand,
                         fontWeight: FontWeight.w500)),
               ),
             ],
@@ -729,11 +713,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   width: 48,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.indigo : Colors.white,
+                    color: isSelected ? kBrand : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color:
-                          isSelected ? Colors.indigo : const Color(0xFFD1D5DB),
+                      color: isSelected ? kBrand : const Color(0xFFD1D5DB),
                       width: 1.5,
                     ),
                   ),
@@ -758,7 +741,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Expandable Section ───────────────────────────────────────────────────
-
   Widget _buildExpandableSection({
     required String title,
     required bool expanded,
@@ -804,7 +786,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Reviews Section ──────────────────────────────────────────────────────
-
   Widget _buildReviewsSection() {
     final avgRating = _reviews.isEmpty
         ? 0.0
@@ -838,7 +819,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ],
               ),
-              // Average rating badge
               if (_reviews.isNotEmpty)
                 Container(
                   padding:
@@ -874,7 +854,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: _showAddReview ? const Color(0xFFE8EAF6) : Colors.indigo,
+                color: _showAddReview ? const Color(0xFFEEEFFD) : kBrand,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -883,7 +863,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Icon(
                     _showAddReview ? Icons.close : Icons.rate_review_outlined,
                     size: 16,
-                    color: _showAddReview ? Colors.indigo : Colors.white,
+                    color: _showAddReview ? kBrand : Colors.white,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -891,7 +871,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: _showAddReview ? Colors.indigo : Colors.white,
+                      color: _showAddReview ? kBrand : Colors.white,
                     ),
                   ),
                 ],
@@ -912,7 +892,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Star rating picker
                   const Text('Your Rating',
                       style: TextStyle(
                           fontSize: 12,
@@ -935,7 +914,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     }),
                   ),
                   const SizedBox(height: 12),
-                  // Comment input
                   const Text('Your Comment',
                       style: TextStyle(
                           fontSize: 12,
@@ -958,7 +936,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Colors.indigo),
+                        borderSide: const BorderSide(color: kBrand),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -967,13 +945,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Submit button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submittingReview ? null : _submitReview,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo,
+                        backgroundColor: kBrand,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -1003,7 +980,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(color: Colors.indigo),
+                child: CircularProgressIndicator(color: kBrand),
               ),
             )
           else if (_reviews.isEmpty)
@@ -1025,7 +1002,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final reviewId = review['_id'] ?? '';
     final userId = review['userId'];
     final name = userId is Map ? (userId['fullName'] ?? 'User') : 'User';
-    // Check if this review belongs to current user
     final isOwner = userId is Map ? (userId['_id'] == _uid) : (userId == _uid);
     final rating = (review['rating'] ?? 0) as int;
     final comment = review['comment'] ?? '';
@@ -1052,12 +1028,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         children: [
           Row(
             children: [
-              // Avatar circle
               Container(
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Colors.indigo.withOpacity(0.15),
+                  color: kBrand.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -1066,7 +1041,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: Colors.indigo),
+                        color: kBrand),
                   ),
                 ),
               ),
@@ -1087,7 +1062,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ],
                 ),
               ),
-              // Stars
               Row(
                 children: List.generate(
                   5,
@@ -1098,7 +1072,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
               ),
-              // Delete button (only for own reviews)
               if (isOwner) ...[
                 const SizedBox(width: 8),
                 GestureDetector(
@@ -1126,7 +1099,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ─── Bottom Bar ───────────────────────────────────────────────────────────
-
   Widget _buildBottomBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
@@ -1164,7 +1136,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ? const Padding(
                       padding: EdgeInsets.all(12),
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.indigo),
+                          strokeWidth: 2, color: kBrand),
                     )
                   : Icon(
                       (_product?.isWishlist ?? false)
@@ -1226,7 +1198,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: kBrand,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(

@@ -5,6 +5,7 @@ import 'auth_session.dart';
 import 'paypal_webview.dart';
 
 const String _ordersBaseUrl = 'http://10.0.2.2:3000';
+const Color kBrand = Color.fromARGB(255, 98, 113, 241);
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,6 @@ class OrderItem {
   }
 }
 
-// ✅ Embedded address object returned directly inside the order
 class OrderAddress {
   final String fullName;
   final String phone;
@@ -98,7 +98,7 @@ class Order {
   final String? paymentId;
   final DateTime createdAt;
   final DateTime? paidAt;
-  final OrderAddress? address; // ✅ embedded address
+  final OrderAddress? address;
 
   Order({
     required this.id,
@@ -130,8 +130,11 @@ class Order {
       paymentStatus: json['paymentStatus'] ?? 'unpaid',
       paymentProvider: json['paymentProvider'] ?? 'paypal',
       paymentId: json['paymentId'],
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      paidAt: json['paidAt'] != null ? DateTime.tryParse(json['paidAt']) : null,
+      createdAt:
+          DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      paidAt: json['paidAt'] != null
+          ? DateTime.tryParse(json['paidAt'])
+          : null,
       address: json['address'] != null
           ? OrderAddress.fromJson(json['address'])
           : null,
@@ -175,7 +178,10 @@ class _OrdersScreenState extends State<OrdersScreen>
   }
 
   Future<void> _fetchOrders() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final res = await http.get(
         Uri.parse('$_ordersBaseUrl/orders/my/$_uid'),
@@ -197,8 +203,9 @@ class _OrdersScreenState extends State<OrdersScreen>
   }
 
   List<Order> get _allOrders => _orders;
-  List<Order> get _paidOrders =>
-      _orders.where((o) => o.status == 'paid' || o.status == 'processing').toList();
+  List<Order> get _paidOrders => _orders
+      .where((o) => o.status == 'paid' || o.status == 'processing')
+      .toList();
   List<Order> get _pendingOrders =>
       _orders.where((o) => o.status == 'pending').toList();
 
@@ -213,7 +220,8 @@ class _OrdersScreenState extends State<OrdersScreen>
             _buildTabBar(),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.indigo))
+                  ? const Center(
+                      child: CircularProgressIndicator(color: kBrand))
                   : _error != null
                       ? _buildError()
                       : TabBarView(
@@ -240,12 +248,14 @@ class _OrdersScreenState extends State<OrdersScreen>
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             child: Container(
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back_ios_new, size: 16, color: Color(0xFF374151)),
+              child: const Icon(Icons.arrow_back_ios_new,
+                  size: 16, color: Color(0xFF374151)),
             ),
           ),
           const SizedBox(width: 12),
@@ -254,18 +264,27 @@ class _OrdersScreenState extends State<OrdersScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('My Orders',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))),
-                Text('${_orders.length} order${_orders.length == 1 ? '' : 's'}',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937))),
+                Text(
+                    '${_orders.length} order${_orders.length == 1 ? '' : 's'}',
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF9CA3AF))),
               ],
             ),
           ),
           GestureDetector(
             onTap: _fetchOrders,
             child: Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(color: const Color(0xFFE8EAF6), borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.refresh, size: 18, color: Colors.indigo),
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEFFD),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.refresh, size: 18, color: kBrand),
             ),
           ),
         ],
@@ -278,12 +297,14 @@ class _OrdersScreenState extends State<OrdersScreen>
       color: Colors.white,
       child: TabBar(
         controller: _tabController,
-        labelColor: Colors.indigo,
+        labelColor: kBrand,
         unselectedLabelColor: const Color(0xFF9CA3AF),
-        indicatorColor: Colors.indigo,
+        indicatorColor: kBrand,
         indicatorWeight: 2.5,
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        labelStyle: const TextStyle(
+            fontSize: 13, fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(
+            fontSize: 13, fontWeight: FontWeight.w500),
         tabs: [
           Tab(text: 'All (${_allOrders.length})'),
           Tab(text: 'Paid (${_paidOrders.length})'),
@@ -297,7 +318,7 @@ class _OrdersScreenState extends State<OrdersScreen>
     if (orders.isEmpty) return _buildEmpty();
     return RefreshIndicator(
       onRefresh: _fetchOrders,
-      color: Colors.indigo,
+      color: kBrand,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: orders.length,
@@ -309,13 +330,15 @@ class _OrdersScreenState extends State<OrdersScreen>
   Widget _buildOrderCard(Order order) {
     final statusColor = _statusColor(order.status);
     final statusIcon = _statusIcon(order.status);
-    final itemCount = order.items.fold<int>(0, (s, i) => s + i.quantity);
+    final itemCount =
+        order.items.fold<int>(0, (s, i) => s + i.quantity);
 
     return GestureDetector(
       onTap: () async {
         await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => OrderDetailScreen(order: order)),
+          MaterialPageRoute(
+              builder: (_) => OrderDetailScreen(order: order)),
         );
         _fetchOrders();
       },
@@ -325,13 +348,23 @@ class _OrdersScreenState extends State<OrdersScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))],
+          boxShadow: [
+            BoxShadow(
+              color: kBrand.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Icon(statusIcon, size: 22, color: statusColor),
             ),
             const SizedBox(width: 12),
@@ -339,11 +372,19 @@ class _OrdersScreenState extends State<OrdersScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Order #${order.id.substring(order.id.length - 8).toUpperCase()}',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))),
+                  Text(
+                    'Order #${order.id.substring(order.id.length - 8).toUpperCase()}',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937)),
+                  ),
                   const SizedBox(height: 3),
-                  Text('$itemCount item${itemCount == 1 ? '' : 's'} • ${_formatDate(order.createdAt)}',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                  Text(
+                    '$itemCount item${itemCount == 1 ? '' : 's'} • ${_formatDate(order.createdAt)}',
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280)),
+                  ),
                   const SizedBox(height: 6),
                   _buildStatusBadge(order.status),
                 ],
@@ -353,10 +394,16 @@ class _OrdersScreenState extends State<OrdersScreen>
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('\$${order.total.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                Text(
+                  '\$${order.total.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: kBrand),
+                ),
                 const SizedBox(height: 4),
-                const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF9CA3AF)),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 14, color: Color(0xFF9CA3AF)),
               ],
             ),
           ],
@@ -374,8 +421,14 @@ class _OrdersScreenState extends State<OrdersScreen>
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Text(_statusLabel(status),
-          style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
+      child: Text(
+        _statusLabel(status),
+        style: TextStyle(
+            fontSize: 10,
+            color: color,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3),
+      ),
     );
   }
 
@@ -385,13 +438,19 @@ class _OrdersScreenState extends State<OrdersScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 90, height: 90,
-            decoration: const BoxDecoration(color: Color(0xFFE8EAF6), shape: BoxShape.circle),
-            child: const Icon(Icons.receipt_long_outlined, size: 44, color: Colors.indigo),
+            width: 90,
+            height: 90,
+            decoration: const BoxDecoration(
+                color: Color(0xFFEEEFFD), shape: BoxShape.circle),
+            child: const Icon(Icons.receipt_long_outlined,
+                size: 44, color: kBrand),
           ),
           const SizedBox(height: 16),
           const Text('No orders yet',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937))),
           const SizedBox(height: 6),
           const Text('Your orders will appear here',
               style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF))),
@@ -399,11 +458,16 @@ class _OrdersScreenState extends State<OrdersScreen>
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo, foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: kBrand,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 28, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Start Shopping', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            child: const Text('Start Shopping',
+                style: TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -415,18 +479,22 @@ class _OrdersScreenState extends State<OrdersScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off, size: 60, color: Colors.indigo),
+          const Icon(Icons.wifi_off, size: 60, color: kBrand),
           const SizedBox(height: 16),
-          Text(_error!, textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
+          Text(_error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: Color(0xFF6B7280), fontSize: 14)),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _fetchOrders,
             icon: const Icon(Icons.refresh),
             label: const Text('Try Again'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo, foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: kBrand,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
             ),
           ),
         ],
@@ -436,39 +504,42 @@ class _OrdersScreenState extends State<OrdersScreen>
 
   Color _statusColor(String s) {
     switch (s.toLowerCase()) {
-      case 'paid':        return Colors.green;
-      case 'processing':  return Colors.blue;
-      case 'shipped':     return Colors.orange;
-      case 'delivered':   return Colors.teal;
-      case 'cancelled':   return Colors.red;
-      default:            return const Color(0xFFF59E0B);
+      case 'paid':       return Colors.green;
+      case 'processing': return Colors.blue;
+      case 'shipped':    return Colors.orange;
+      case 'delivered':  return Colors.teal;
+      case 'cancelled':  return Colors.red;
+      default:           return const Color(0xFFF59E0B);
     }
   }
 
   IconData _statusIcon(String s) {
     switch (s.toLowerCase()) {
-      case 'paid':        return Icons.check_circle_outline;
-      case 'processing':  return Icons.autorenew;
-      case 'shipped':     return Icons.local_shipping_outlined;
-      case 'delivered':   return Icons.done_all;
-      case 'cancelled':   return Icons.cancel_outlined;
-      default:            return Icons.schedule;
+      case 'paid':       return Icons.check_circle_outline;
+      case 'processing': return Icons.autorenew;
+      case 'shipped':    return Icons.local_shipping_outlined;
+      case 'delivered':  return Icons.done_all;
+      case 'cancelled':  return Icons.cancel_outlined;
+      default:           return Icons.schedule;
     }
   }
 
   String _statusLabel(String s) {
     switch (s.toLowerCase()) {
-      case 'paid':        return 'PAID';
-      case 'processing':  return 'PROCESSING';
-      case 'shipped':     return 'SHIPPED';
-      case 'delivered':   return 'DELIVERED';
-      case 'cancelled':   return 'CANCELLED';
-      default:            return 'PENDING';
+      case 'paid':       return 'PAID';
+      case 'processing': return 'PROCESSING';
+      case 'shipped':    return 'SHIPPED';
+      case 'delivered':  return 'DELIVERED';
+      case 'cancelled':  return 'CANCELLED';
+      default:           return 'PENDING';
     }
   }
 
   String _formatDate(DateTime dt) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 }
@@ -510,9 +581,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       }
       final data = jsonDecode(res.body);
       final approveUrl = data['approveUrl'];
-      if (approveUrl == null) { _showSnack('No approval URL returned'); return; }
+      if (approveUrl == null) {
+        _showSnack('No approval URL returned');
+        return;
+      }
       if (!mounted) return;
-      await Navigator.push(context, MaterialPageRoute(builder: (_) => PaypalWebview(url: approveUrl)));
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => PaypalWebview(url: approveUrl)),
+      );
     } catch (e) {
       _showSnack('Error: $e');
     } finally {
@@ -522,51 +599,56 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   void _showSnack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   bool get _isPending => widget.order.status == 'pending';
 
   Color _statusColor(String s) {
     switch (s.toLowerCase()) {
-      case 'paid':        return Colors.green;
-      case 'processing':  return Colors.blue;
-      case 'shipped':     return Colors.orange;
-      case 'delivered':   return Colors.teal;
-      case 'cancelled':   return Colors.red;
-      default:            return const Color(0xFFF59E0B);
+      case 'paid':       return Colors.green;
+      case 'processing': return Colors.blue;
+      case 'shipped':    return Colors.orange;
+      case 'delivered':  return Colors.teal;
+      case 'cancelled':  return Colors.red;
+      default:           return const Color(0xFFF59E0B);
     }
   }
 
   IconData _statusIcon(String s) {
     switch (s.toLowerCase()) {
-      case 'paid':        return Icons.check_circle_outline;
-      case 'processing':  return Icons.autorenew;
-      case 'shipped':     return Icons.local_shipping_outlined;
-      case 'delivered':   return Icons.done_all;
-      case 'cancelled':   return Icons.cancel_outlined;
-      default:            return Icons.schedule;
+      case 'paid':       return Icons.check_circle_outline;
+      case 'processing': return Icons.autorenew;
+      case 'shipped':    return Icons.local_shipping_outlined;
+      case 'delivered':  return Icons.done_all;
+      case 'cancelled':  return Icons.cancel_outlined;
+      default:           return Icons.schedule;
     }
   }
 
   String _statusLabel(String s) {
     switch (s.toLowerCase()) {
-      case 'paid':        return 'PAID';
-      case 'processing':  return 'PROCESSING';
-      case 'shipped':     return 'SHIPPED';
-      case 'delivered':   return 'DELIVERED';
-      case 'cancelled':   return 'CANCELLED';
-      default:            return 'PENDING';
+      case 'paid':       return 'PAID';
+      case 'processing': return 'PROCESSING';
+      case 'shipped':    return 'SHIPPED';
+      case 'delivered':  return 'DELIVERED';
+      case 'cancelled':  return 'CANCELLED';
+      default:           return 'PENDING';
     }
   }
 
   String _formatDate(DateTime dt) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
   String _formatDateTime(DateTime dt) {
-    final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final h =
+        dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
     final m = dt.minute.toString().padLeft(2, '0');
     final ampm = dt.hour >= 12 ? 'PM' : 'AM';
     return '${_formatDate(dt)} at $h:$m $ampm';
@@ -582,7 +664,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──────────────────────────────────────────────────────
+            // ── Header ───────────────────────────────────────────────────
             Container(
               color: Colors.white,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -591,9 +673,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.arrow_back_ios_new, size: 16, color: Color(0xFF374151)),
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 16, color: Color(0xFF374151)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -602,26 +689,41 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Order Details',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))),
-                        Text('#${order.id.substring(order.id.length - 8).toUpperCase()}',
-                            style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1F2937))),
+                        Text(
+                          '#${order.id.substring(order.id.length - 8).toUpperCase()}',
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF9CA3AF)),
+                        ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: statusColor.withOpacity(0.3)),
+                      border:
+                          Border.all(color: statusColor.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(_statusIcon(order.status), size: 12, color: statusColor),
+                        Icon(_statusIcon(order.status),
+                            size: 12, color: statusColor),
                         const SizedBox(width: 4),
-                        Text(_statusLabel(order.status),
-                            style: TextStyle(fontSize: 11, color: statusColor, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
+                        Text(
+                          _statusLabel(order.status),
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: statusColor,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3),
+                        ),
                       ],
                     ),
                   ),
@@ -629,14 +731,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
 
-            // ── Scrollable body ──────────────────────────────────────────────
+            // ── Scrollable body ──────────────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // Pending warning
                     if (_isPending) ...[
                       Container(
@@ -644,76 +745,104 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFFBEB),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFFDE68A)),
+                          border: Border.all(
+                              color: const Color(0xFFFDE68A)),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: Color(0xFFF59E0B), size: 22),
+                            Icon(Icons.warning_amber_rounded,
+                                color: Color(0xFFF59E0B), size: 22),
                             SizedBox(width: 10),
-                            Expanded(child: Text(
-                              'This order is awaiting payment. Complete your payment to confirm the order.',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF92400E)),
-                            )),
+                            Expanded(
+                              child: Text(
+                                'This order is awaiting payment. Complete your payment to confirm the order.',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF92400E)),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 16),
                     ],
 
-                    // ── Order Info ───────────────────────────────────────────
+                    // ── Order Info ────────────────────────────────────────
                     _sectionTitle('Order Information'),
                     const SizedBox(height: 8),
                     _infoCard([
-                      _infoRow(Icons.tag, 'Order ID', order.id.toUpperCase()),
-                      _infoRow(Icons.calendar_today_outlined, 'Placed On', _formatDateTime(order.createdAt)),
+                      _infoRow(Icons.tag, 'Order ID',
+                          order.id.toUpperCase()),
+                      _infoRow(Icons.calendar_today_outlined, 'Placed On',
+                          _formatDateTime(order.createdAt)),
                       if (order.paidAt != null)
-                        _infoRow(Icons.check_circle_outline, 'Paid On', _formatDateTime(order.paidAt!),
-                            valueColor: Colors.green),
-                      _infoRow(Icons.inventory_2_outlined, 'Total Items',
-                          '${order.items.fold<int>(0, (s, i) => s + i.quantity)} item(s)'),
+                        _infoRow(
+                          Icons.check_circle_outline,
+                          'Paid On',
+                          _formatDateTime(order.paidAt!),
+                          valueColor: Colors.green,
+                        ),
+                      _infoRow(
+                        Icons.inventory_2_outlined,
+                        'Total Items',
+                        '${order.items.fold<int>(0, (s, i) => s + i.quantity)} item(s)',
+                      ),
                     ]),
 
                     const SizedBox(height: 16),
 
-                    // ── Shipping Address ─────────────────────────────────────
+                    // ── Shipping Address ──────────────────────────────────
                     if (order.address != null) ...[
                       _sectionTitle('Shipping Address'),
                       const SizedBox(height: 8),
                       _infoCard([
-                        _infoRow(Icons.person_outline, 'Name', order.address!.fullName),
-                        _infoRow(Icons.phone_outlined, 'Phone', order.address!.phone),
-                        _infoRow(Icons.location_on_outlined, 'Address', order.address!.fullAddress),
+                        _infoRow(Icons.person_outline, 'Name',
+                            order.address!.fullName),
+                        _infoRow(Icons.phone_outlined, 'Phone',
+                            order.address!.phone),
+                        _infoRow(Icons.location_on_outlined, 'Address',
+                            order.address!.fullAddress),
                       ]),
                       const SizedBox(height: 16),
                     ],
 
-                    // ── Payment ──────────────────────────────────────────────
+                    // ── Payment ───────────────────────────────────────────
                     _sectionTitle('Payment'),
                     const SizedBox(height: 8),
                     _infoCard([
-                      _infoRow(Icons.payment_outlined, 'Provider', order.paymentProvider.toUpperCase()),
+                      _infoRow(Icons.payment_outlined, 'Provider',
+                          order.paymentProvider.toUpperCase()),
                       _infoRow(
                         order.paymentStatus == 'paid'
                             ? Icons.check_circle_outline
                             : Icons.radio_button_unchecked,
                         'Payment Status',
                         order.paymentStatus.toUpperCase(),
-                        valueColor: order.paymentStatus == 'paid' ? Colors.green : const Color(0xFFF59E0B),
+                        valueColor: order.paymentStatus == 'paid'
+                            ? Colors.green
+                            : const Color(0xFFF59E0B),
                       ),
                       if (order.paymentId != null)
-                        _infoRow(Icons.receipt_outlined, 'Transaction ID', order.paymentId!),
+                        _infoRow(Icons.receipt_outlined, 'Transaction ID',
+                            order.paymentId!),
                     ]),
 
                     const SizedBox(height: 16),
 
-                    // ── Items ────────────────────────────────────────────────
+                    // ── Items ─────────────────────────────────────────────
                     _sectionTitle('Items (${order.items.length})'),
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
+                        boxShadow: [
+                          BoxShadow(
+                            color: kBrand.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: order.items.asMap().entries.map((e) {
@@ -731,57 +860,114 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 child: Row(
                                   children: [
                                     Container(
-                                      width: 60, height: 60,
+                                      width: 60,
+                                      height: 60,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFE8EAF6),
-                                        borderRadius: BorderRadius.circular(10),
+                                        color: const Color(0xFFEEEFFD),
+                                        borderRadius:
+                                            BorderRadius.circular(10),
                                       ),
                                       child: imageUrl != null
                                           ? ClipRRect(
-                                              borderRadius: BorderRadius.circular(10),
-                                              child: Image.network(imageUrl, fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) =>
-                                                      const Icon(Icons.shopping_bag, color: Colors.indigo, size: 26)),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              child: Image.network(
+                                                imageUrl,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(
+                                                        Icons.shopping_bag,
+                                                        color: kBrand,
+                                                        size: 26),
+                                              ),
                                             )
-                                          : const Icon(Icons.shopping_bag, color: Colors.indigo, size: 26),
+                                          : const Icon(Icons.shopping_bag,
+                                              color: kBrand, size: 26),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           if (item.brand.isNotEmpty)
-                                            Text(item.brand.toUpperCase(),
-                                                style: const TextStyle(fontSize: 10, color: Colors.indigo, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-                                          Text(item.title,
-                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
-                                              maxLines: 2, overflow: TextOverflow.ellipsis),
+                                            Text(
+                                              item.brand.toUpperCase(),
+                                              style: const TextStyle(
+                                                  fontSize: 10,
+                                                  color: kBrand,
+                                                  fontWeight:
+                                                      FontWeight.bold,
+                                                  letterSpacing: 0.5),
+                                            ),
+                                          Text(
+                                            item.title,
+                                            style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF1F2937)),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                           if (item.category.isNotEmpty)
-                                            Text(item.category, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                                            Text(item.category,
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color:
+                                                        Color(0xFF9CA3AF))),
                                           const SizedBox(height: 4),
                                           Row(
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                                decoration: BoxDecoration(color: const Color(0xFFE8EAF6), borderRadius: BorderRadius.circular(6)),
-                                                child: Text('Qty: ${item.quantity}',
-                                                    style: const TextStyle(fontSize: 11, color: Colors.indigo, fontWeight: FontWeight.bold)),
+                                                padding: const EdgeInsets
+                                                    .symmetric(
+                                                    horizontal: 7,
+                                                    vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(
+                                                      0xFFEEEFFD),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          6),
+                                                ),
+                                                child: Text(
+                                                  'Qty: ${item.quantity}',
+                                                  style: const TextStyle(
+                                                      fontSize: 11,
+                                                      color: kBrand,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
                                               ),
                                               const SizedBox(width: 8),
-                                              Text('\$${item.price.toStringAsFixed(2)} each',
-                                                  style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                                              Text(
+                                                '\$${item.price.toStringAsFixed(2)} each',
+                                                style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color:
+                                                        Color(0xFF6B7280)),
+                                              ),
                                             ],
                                           ),
                                         ],
                                       ),
                                     ),
-                                    Text('\$${(item.price * item.quantity).toStringAsFixed(2)}',
-                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))),
+                                    Text(
+                                      '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1F2937)),
+                                    ),
                                   ],
                                 ),
                               ),
                               if (!isLast)
-                                const Divider(height: 1, color: Color(0xFFF3F4F6), indent: 14, endIndent: 14),
+                                const Divider(
+                                    height: 1,
+                                    color: Color(0xFFF3F4F6),
+                                    indent: 14,
+                                    endIndent: 14),
                             ],
                           );
                         }).toList(),
@@ -790,7 +976,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ── Price Summary ────────────────────────────────────────
+                    // ── Price Summary ─────────────────────────────────────
                     _sectionTitle('Price Summary'),
                     const SizedBox(height: 8),
                     Container(
@@ -798,24 +984,42 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
+                        boxShadow: [
+                          BoxShadow(
+                            color: kBrand.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
-                          _summaryRow('Subtotal', '\$${order.subtotal.toStringAsFixed(2)}'),
+                          _summaryRow('Subtotal',
+                              '\$${order.subtotal.toStringAsFixed(2)}'),
                           const SizedBox(height: 8),
-                          _summaryRow('Shipping Fee', '\$${order.shippingFee.toStringAsFixed(2)}'),
+                          _summaryRow('Shipping Fee',
+                              '\$${order.shippingFee.toStringAsFixed(2)}'),
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+                            child: Divider(
+                                height: 1, color: Color(0xFFE5E7EB)),
                           ),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
                             children: [
                               const Text('Total',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1F2937))),
-                              Text('\$${order.total.toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1F2937))),
+                              Text(
+                                '\$${order.total.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: kBrand),
+                              ),
                             ],
                           ),
                         ],
@@ -828,13 +1032,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
 
-            // ── Pay Now (pending only) ───────────────────────────────────────
+            // ── Pay Now (pending only) ────────────────────────────────────
             if (_isPending)
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 12, offset: const Offset(0, -3))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.07),
+                      blurRadius: 12,
+                      offset: const Offset(0, -3),
+                    ),
+                  ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -845,22 +1055,41 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _payingNow ? null : _payNow,
                         icon: _payingNow
-                            ? const SizedBox(width: 18, height: 18,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2),
+                              )
                             : Container(
-                                width: 22, height: 22,
-                                decoration: BoxDecoration(color: const Color(0xFF009CDE), borderRadius: BorderRadius.circular(4)),
-                                child: const Center(child: Text('Pay', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold))),
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF009CDE),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Center(
+                                  child: Text('Pay',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.bold)),
+                                ),
                               ),
                         label: Text(
-                          _payingNow ? 'Initializing...' : 'Pay \$${widget.order.total.toStringAsFixed(2)} with PayPal',
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          _payingNow
+                              ? 'Initializing...'
+                              : 'Pay \$${widget.order.total.toStringAsFixed(2)} with PayPal',
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF003087),
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          disabledBackgroundColor: const Color(0xFFD1D5DB),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          disabledBackgroundColor:
+                              const Color(0xFFD1D5DB),
                         ),
                       ),
                     ),
@@ -868,10 +1097,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.lock_outlined, size: 12, color: Color(0xFF9CA3AF)),
+                        Icon(Icons.lock_outlined,
+                            size: 12, color: Color(0xFF9CA3AF)),
                         SizedBox(width: 4),
                         Text('SECURE PAYMENT  •  POWERED BY PAYPAL',
-                            style: TextStyle(fontSize: 10, color: Color(0xFF9CA3AF), fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                            style: TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF9CA3AF),
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5)),
                       ],
                     ),
                   ],
@@ -884,48 +1118,75 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _sectionTitle(String title) => Text(title,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF374151), letterSpacing: 0.3));
+      style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF374151),
+          letterSpacing: 0.3));
 
   Widget _infoCard(List<Widget> rows) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: kBrand.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: rows.asMap().entries.map((e) {
           final isLast = e.key == rows.length - 1;
           return Column(children: [
             e.value,
-            if (!isLast) const Divider(height: 1, color: Color(0xFFF3F4F6), indent: 14, endIndent: 14),
+            if (!isLast)
+              const Divider(
+                  height: 1,
+                  color: Color(0xFFF3F4F6),
+                  indent: 14,
+                  endIndent: 14),
           ]);
         }).toList(),
       ),
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value, {Color? valueColor}) {
+  Widget _infoRow(IconData icon, String label, String value,
+      {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
           Container(
-            width: 32, height: 32,
-            decoration: BoxDecoration(color: const Color(0xFFE8EAF6), borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, size: 16, color: Colors.indigo),
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEEFFD),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: kBrand),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 11, color: Color(0xFF9CA3AF))),
                 const SizedBox(height: 2),
-                Text(value,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                        color: valueColor ?? const Color(0xFF1F2937)),
-                    maxLines: 2, overflow: TextOverflow.ellipsis),
+                Text(
+                  value,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: valueColor ?? const Color(0xFF1F2937)),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
@@ -937,8 +1198,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget _summaryRow(String label, String value) => Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1F2937))),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: Color(0xFF6B7280))),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937))),
         ],
       );
 }

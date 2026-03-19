@@ -6,6 +6,7 @@ import 'addresses_screen.dart';
 import 'paypal_webview.dart';
 
 const String _checkoutBaseUrl = 'http://10.0.2.2:3000';
+const Color kBrand = Color.fromARGB(255, 98, 113, 241);
 
 class CheckoutScreen extends StatefulWidget {
   final double subtotal;
@@ -52,17 +53,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<void> _placeOrder() async {
     if (_placingOrder) return;
-
-    // Guard: must have address selected
     if (_selectedAddressId == null) {
       _showSnack('Please select a shipping address');
       return;
     }
-
     setState(() => _placingOrder = true);
-
     try {
-      // ✅ Step 1: Create order with userId + addressId
       final orderRes = await http.post(
         Uri.parse('$_checkoutBaseUrl/orders'),
         headers: _headers,
@@ -71,21 +67,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'addressId': _selectedAddressId,
         }),
       );
-
       if (orderRes.statusCode != 200 && orderRes.statusCode != 201) {
         _showSnack('Failed to create order (${orderRes.statusCode})');
         return;
       }
-
       final orderData = jsonDecode(orderRes.body);
       final orderId = orderData['_id'] ?? orderData['id'];
-
       if (orderId == null) {
         _showSnack('Order ID missing from response');
         return;
       }
-
-      // Step 2: Create PayPal payment
       final paypalRes = await http.post(
         Uri.parse('$_checkoutBaseUrl/paypal/create'),
         headers: _headers,
@@ -95,28 +86,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'order_id': orderId,
         }),
       );
-
       if (paypalRes.statusCode != 200 && paypalRes.statusCode != 201) {
         _showSnack('PayPal init failed (${paypalRes.statusCode})');
         return;
       }
-
       final paypalData = jsonDecode(paypalRes.body);
       final approveUrl = paypalData['approveUrl'];
-
       if (approveUrl == null) {
         _showSnack('No approval URL returned');
         return;
       }
-
-      // Step 3: Open PayPal WebView
       final result = await Navigator.push<bool>(
         context,
-        MaterialPageRoute(
-          builder: (_) => PaypalWebview(url: approveUrl),
-        ),
+        MaterialPageRoute(builder: (_) => PaypalWebview(url: approveUrl)),
       );
-
       if (mounted && result == false) {
         _showSnack('Payment Cancelled');
       }
@@ -150,7 +133,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _showSnack(String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
 
   @override
   Widget build(BuildContext context) {
@@ -162,8 +146,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             _buildHeader(),
             _buildStepper(),
             Expanded(
-              child:
-                  _currentStep == 0 ? _buildShippingStep() : _buildReviewStep(),
+              child: _currentStep == 0
+                  ? _buildShippingStep()
+                  : _buildReviewStep(),
             ),
             _buildBottomBar(),
           ],
@@ -206,7 +191,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onTap: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AddressesScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const AddressesScreen()),
               );
               _fetchAddresses();
             },
@@ -214,11 +200,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: Colors.indigo.withOpacity(0.1),
+                color: kBrand.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.add_location_alt_outlined,
-                  size: 18, color: Colors.indigo),
+                  size: 18, color: kBrand),
             ),
           ),
         ],
@@ -236,8 +222,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             return Expanded(
               child: Container(
                 height: 2,
-                color:
-                    0 < _currentStep ? Colors.indigo : const Color(0xFFE5E7EB),
+                color: 0 < _currentStep
+                    ? kBrand
+                    : const Color(0xFFE5E7EB),
               ),
             );
           }
@@ -258,35 +245,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   height: 28,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isDone || isActive ? Colors.indigo : Colors.white,
+                    color: isDone || isActive ? kBrand : Colors.white,
                     border: Border.all(
                       color: isDone || isActive
-                          ? Colors.indigo
+                          ? kBrand
                           : const Color(0xFFD1D5DB),
                       width: 2,
                     ),
                   ),
                   child: Center(
                     child: isDone
-                        ? const Icon(Icons.check, size: 14, color: Colors.white)
-                        : Text('${stepIdx + 1}',
+                        ? const Icon(Icons.check,
+                            size: 14, color: Colors.white)
+                        : Text(
+                            '${stepIdx + 1}',
                             style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: isActive
                                     ? Colors.white
-                                    : const Color(0xFF9CA3AF))),
+                                    : const Color(0xFF9CA3AF)),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(steps[stepIdx],
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                        color: isActive || isDone
-                            ? Colors.indigo
-                            : const Color(0xFF9CA3AF))),
+                Text(
+                  steps[stepIdx],
+                  style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: isActive || isDone
+                          ? kBrand
+                          : const Color(0xFF9CA3AF)),
+                ),
               ],
             ),
           );
@@ -310,17 +302,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1F2937))),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8EAF6),
+                  color: const Color(0xFFEEEFFD),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${_addresses.length} Address${_addresses.length == 1 ? '' : 'es'}',
                   style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.indigo,
+                      color: kBrand,
                       fontWeight: FontWeight.w600),
                 ),
               ),
@@ -331,7 +323,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(32),
-                child: CircularProgressIndicator(color: Colors.indigo),
+                child: CircularProgressIndicator(color: kBrand),
               ),
             )
           else if (_addresses.isEmpty)
@@ -343,7 +335,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onTap: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AddressesScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const AddressesScreen()),
               );
               _fetchAddresses();
             },
@@ -353,7 +346,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD1D5DB), width: 1.5),
+                border: Border.all(
+                    color: const Color(0xFFD1D5DB), width: 1.5),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -399,7 +393,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const Expanded(
                   child: Text(
                     'Payment will be processed securely via PayPal',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
+                    style: TextStyle(
+                        fontSize: 12, color: Color(0xFF374151)),
                   ),
                 ),
               ],
@@ -421,7 +416,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Expanded(
                   child: Text(
                     'Free Shipping on orders over \$50',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF166534)),
+                    style: TextStyle(
+                        fontSize: 13, color: Color(0xFF166534)),
                   ),
                 ),
               ],
@@ -458,14 +454,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AddressesScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const AddressesScreen()),
               );
               _fetchAddresses();
             },
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Add Address'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
+              backgroundColor: kBrand,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
@@ -488,13 +485,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.indigo : const Color(0xFFE5E7EB),
+            color: isSelected ? kBrand : const Color(0xFFE5E7EB),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
-                  ? Colors.indigo.withOpacity(0.08)
+                  ? kBrand.withOpacity(0.08)
                   : Colors.black.withOpacity(0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
@@ -508,7 +505,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               height: 36,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFFE8EAF6)
+                    ? const Color(0xFFEEEFFD)
                     : const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -517,7 +514,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ? Icons.home_outlined
                     : Icons.location_on_outlined,
                 size: 18,
-                color: isSelected ? Colors.indigo : const Color(0xFF6B7280),
+                color: isSelected ? kBrand : const Color(0xFF6B7280),
               ),
             ),
             const SizedBox(width: 10),
@@ -538,7 +535,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.indigo,
+                            color: kBrand,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text('DEFAULT',
@@ -552,8 +549,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   Text(
                     '${addr.street}, ${addr.city}, ${addr.country} ${addr.zipCode}',
-                    style:
-                        const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280)),
                   ),
                   Text(addr.phone,
                       style: const TextStyle(
@@ -567,15 +564,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? Colors.indigo : Colors.white,
+                color: isSelected ? kBrand : Colors.white,
                 border: Border.all(
-                  color: isSelected ? Colors.indigo : const Color(0xFFD1D5DB),
+                  color: isSelected ? kBrand : const Color(0xFFD1D5DB),
                   width: 2,
                 ),
               ),
               child: isSelected
                   ? const Center(
-                      child: Icon(Icons.circle, size: 10, color: Colors.white))
+                      child: Icon(Icons.circle,
+                          size: 10, color: Colors.white))
                   : null,
             ),
           ],
@@ -613,8 +611,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           color: Color(0xFF1F2937))),
                   Text(
                     '${selectedAddr.first.street}, ${selectedAddr.first.city}, ${selectedAddr.first.country} ${selectedAddr.first.zipCode}',
-                    style:
-                        const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280)),
                   ),
                   Text(selectedAddr.first.phone,
                       style: const TextStyle(
@@ -653,8 +651,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // ✅ Real totals from cart
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -664,7 +660,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             child: Column(
               children: [
-                _summaryRow('Subtotal', '\$${_subtotal.toStringAsFixed(2)}'),
+                _summaryRow(
+                    'Subtotal', '\$${_subtotal.toStringAsFixed(2)}'),
                 const SizedBox(height: 8),
                 _summaryRow('Shipping', _shippingLabel),
                 if (_promoDiscount > 0) ...[
@@ -692,7 +689,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.indigo),
+                          color: kBrand),
                     ),
                   ],
                 ),
@@ -714,7 +711,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Expanded(
                   child: Text(
                     'Tapping "Place Order" will create your order and redirect you to PayPal to complete payment.',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF0369A1)),
+                    style: TextStyle(
+                        fontSize: 12, color: Color(0xFF0369A1)),
                   ),
                 ),
               ],
@@ -744,10 +742,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EAF6),
+              color: const Color(0xFFEEEFFD),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 16, color: Colors.indigo),
+            child: Icon(icon, size: 16, color: kBrand),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -825,19 +823,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           color: Colors.white, strokeWidth: 2),
                     )
                   : Icon(
-                      isReview ? Icons.payment_outlined : Icons.arrow_forward,
+                      isReview
+                          ? Icons.payment_outlined
+                          : Icons.arrow_forward,
                       size: 18),
               label: Text(
-                  _placingOrder
-                      ? 'Processing...'
-                      : isReview
-                          ? 'Place Order & Pay with PayPal'
-                          : 'Continue to Review',
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.bold)),
+                _placingOrder
+                    ? 'Processing...'
+                    : isReview
+                        ? 'Place Order & Pay with PayPal'
+                        : 'Continue to Review',
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    isReview ? const Color(0xFF003087) : Colors.indigo,
+                    isReview ? const Color(0xFF003087) : kBrand,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
